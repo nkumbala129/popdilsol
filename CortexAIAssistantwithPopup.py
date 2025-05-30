@@ -108,20 +108,21 @@ st.markdown("""
     display: none !important;
 }
 /* Fix the main title at the top */
-[data-testid="stAppViewContainer"] > div:first-child > div > div > h1 {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background-color: white; /* Adjust based on your theme */
-    z-index: 1000;
-    padding: 1rem;
-    margin: 0;
-    border-bottom: 1px solid #e6e6e6; /* Optional: subtle border for separation */
+[data-testid="stAppViewContainer"] h1 {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    background-color: #ffffff !important; /* White background, adjust for dark theme if needed */
+    z-index: 9999 !important; /* High z-index to ensure it stays on top */
+    padding: 1rem 2rem !important; /* Adjust padding for better spacing */
+    margin: 0 !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important; /* Subtle shadow for separation */
+    box-sizing: border-box !important;
 }
-/* Add padding to the content to prevent overlap with fixed title */
-[data-testid="stAppViewContainer"] {
-    padding-top: 60px; /* Adjust based on the height of your title */
+/* Add padding to the main content to prevent overlap with the fixed title */
+[data-testid="stAppViewContainer"] > div:first-child {
+    padding-top: 70px !important; /* Increased to account for title height */
 }
 </style>
 """, unsafe_allow_html=True)
