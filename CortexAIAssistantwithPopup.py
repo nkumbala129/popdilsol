@@ -85,7 +85,7 @@ if "rerun_trigger" not in st.session_state:
 
 # --- CSS Styling ---
 # Apply custom CSS to hide Streamlit branding, prevent chat message shading, disable copy buttons,
-# and fix the main title and semantic model text at the top of the page with responsive sizing.
+# and fix the header (title + semantic model text) at the top of the page.
 st.markdown("""
 <style>
 #MainMenu, header, footer {visibility: hidden;}
@@ -108,7 +108,7 @@ st.markdown("""
     display: none !important;
 }
 /* Fix the header (title + semantic model text) at the top */
-[data-testid="stAppViewContainer"] > div:first-child > div:first-child {
+.fixed-header {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
@@ -122,20 +122,20 @@ st.markdown("""
 }
 /* Adjust width to account for sidebar */
 @media (min-width: 992px) {
-    [data-testid="stAppViewContainer"] > div:first-child > div:first-child {
+    .fixed-header {
         left: 250px !important; /* Match sidebar width */
         width: calc(100% - 250px) !important; /* Adjust for sidebar */
     }
 }
 /* On mobile, when sidebar collapses, use full width */
 @media (max-width: 991px) {
-    [data-testid="stAppViewContainer"] > div:first-child > div:first-child {
+    .fixed-header {
         left: 0 !important;
         width: 100% !important;
     }
 }
 /* Responsive font size for the title */
-[data-testid="stAppViewContainer"] h1 {
+.fixed-header h1 {
     font-size: clamp(1.5rem, 2.5vw, 2rem) !important; /* Responsive font size */
     margin: 0 !important;
     white-space: nowrap !important;
@@ -143,13 +143,13 @@ st.markdown("""
     text-overflow: ellipsis !important; /* Handle long titles */
 }
 /* Ensure semantic model text doesn't break layout */
-[data-testid="stAppViewContainer"] > div:first-child > div:first-child > div:nth-child(2) {
+.fixed-header div:nth-child(2) {
     font-size: 0.9rem !important;
     color: #666 !important; /* Match the gray color from the screenshot */
     margin-top: 0.2rem !important;
 }
 /* Add padding to main content to prevent overlap with fixed header */
-[data-testid="stAppViewContainer"] > div:first-child {
+main {
     padding-top: 80px !important; /* Adjust based on header height */
 }
 </style>
@@ -646,12 +646,16 @@ else:
                 "- [Contact Support](https://www.snowflake.com/en/support/)"
             )
 
-    # --- Main UI and Query Processing ---
-    # Set up main interface with title, semantic model display, and chat input.
+# --- Main UI and Query Processing ---
+# Set up main interface with a fixed header containing the title and semantic model text.
+with st.container():
+    st.markdown('<div class="fixed-header">', unsafe_allow_html=True)
     st.title("Cortex AI Assistant by DiLytics")
     semantic_model_filename = SEMANTIC_MODEL.split("/")[-1]
     st.write(f"Semantic Model: {semantic_model_filename}")
-    init_service_metadata()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+init_service_metadata()
 
     # Define sample questions for sidebar buttons.
     st.sidebar.subheader("Sample Questions")
