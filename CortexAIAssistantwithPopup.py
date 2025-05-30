@@ -1,5 +1,4 @@
-# Import necessary libraries for Streamlit UI, JSON handling, regex, HTTP requests,
-# Snowflake connectivity, pandas for data manipulation, Plotly for visualizations, and typing.
+```python
 import streamlit as st
 import json
 import re
@@ -8,23 +7,20 @@ import snowflake.connector
 import pandas as pd
 from snowflake.snowpark import Session
 from snowflake.core import Root
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Dict
 import plotly.express as px
 import time
 
-# --- Snowflake/Cortex Configuration ---
-# Define constants for Snowflake connection and Cortex API settings.
-# These specify the host, database, schema, API endpoint, and semantic model for procurement data.
+# Snowflake/Cortex Configuration
 HOST = "gbjyvct-lsb50763.snowflakecomputing.com"
 DATABASE = "AI"
 SCHEMA = "DWH_MART"
 API_ENDPOINT = "/api/v2/cortex/agent:run"
 API_TIMEOUT = 50000  # in milliseconds
 CORTEX_SEARCH_SERVICES = "PROC_SERVICE"
-SEMANTIC_MODEL = '@"AI"."DWH_MART"."PROCUREMENT_SEARCH"/procurement.yaml'
+SEMANTIC_MODEL = '@"AI"."DWH_MART"."PROCUREMENT_SEARCH"/proc.yaml'
 
-# --- Model Options ---
-# List available Cortex language models for user selection.
+# Model options
 MODELS = [
     "mistral-large",
     "snowflake-arctic",
@@ -32,16 +28,14 @@ MODELS = [
     "llama3-8b",
 ]
 
-# --- Streamlit Page Config ---
-# Configure Streamlit app with title, wide layout, and auto sidebar.
+# Streamlit Page Config
 st.set_page_config(
     page_title="Welcome to Cortex AI Assistant",
     layout="wide",
     initial_sidebar_state="auto"
 )
 
-# --- Session State Initialization ---
-# Initialize session state to manage authentication, connections, chat history, and app settings.
+# Initialize session state
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
     st.session_state.username = ""
@@ -82,12 +76,8 @@ if "clear_conversation" not in st.session_state:
     st.session_state.clear_conversation = False
 if "rerun_trigger" not in st.session_state:
     st.session_state.rerun_trigger = False
-if "show_popup" not in st.session_state:
-    st.session_state.show_popup = False  # Track popup visibility
 
-# --- CSS Styling ---
-# Apply custom CSS to hide Streamlit branding, prevent chat message shading, and disable copy buttons.
-# Add styling for the popup message to ensure it appears prominently and centered.
+# Hide Streamlit branding, prevent chat history shading, and disable copy buttons/text boxes
 st.markdown("""
 <style>
 #MainMenu, header, footer {visibility: hidden;}
@@ -96,45 +86,27 @@ st.markdown("""
     background-color: transparent !important;
     white-space: pre-wrap !important;
     word-wrap: break-word !important;
-    overflow: hidden !important;
+    overflow: hidden !important; /* Explicitly disable any overflow */
 }
 [data-testid="stChatMessageContent"] {
     white-space: pre-wrap !important;
     word-wrap: break-word !important;
-    overflow: hidden !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
+    overflow: hidden !important; /* Ensure no scrollbars */
+    width: 100% !important; /* Ensure full width */
+    max-width: 100% !important; /* Prevent exceeding container width */
+    box-sizing: border-box !important; /* Include padding/margins in width */
 }
 .copy-button, [data-testid="copy-button"], [title="Copy to clipboard"], [data-testid="stTextArea"] {
     display: none !important;
 }
-.popup-message {
-    position: fixed;
-    top: 20%;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #29B5E8;
-    color: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    z-index: 1000;
-    font-size: 18px;
-    text-align: center;
-}
 </style>
 """, unsafe_allow_html=True)
 
-# --- Stream Text Function ---
-# Stream text output in chunks with a delay for a typewriter effect.
 def stream_text(text: str, chunk_size: int = 1, delay: float = 0.02):
     for i in range(0, len(text), chunk_size):
         yield text[i:i + chunk_size]
         time.sleep(delay)
 
-# --- Start New Conversation ---
-# Reset session state to clear chat history, query results, and chart settings for a new conversation.
 def start_new_conversation():
     st.session_state.chat_history = []
     st.session_state.messages = []
@@ -149,8 +121,6 @@ def start_new_conversation():
     st.session_state.clear_conversation = False
     st.session_state.rerun_trigger = True
 
-# --- Initialize Service Metadata ---
-# Fetch and store metadata for the Cortex search service, including the search column.
 def init_service_metadata():
     st.session_state.service_metadata = [{"name": "PROC_SERVICE", "search_column": ""}]
     st.session_state.selected_cortex_search_service = "PROC_SERVICE"
@@ -160,8 +130,6 @@ def init_service_metadata():
     except Exception as e:
         st.error(f"❌ Failed to verify PROC_SERVICE: {str(e)}. Using default configuration.")
 
-# --- Initialize Config Options ---
-# Set up sidebar controls for clearing conversations and configuring model and context settings.
 def init_config_options():
     st.sidebar.button("Clear conversation", on_click=start_new_conversation)
     st.sidebar.toggle("Use chat history", key="use_chat_history", value=True)
@@ -182,8 +150,6 @@ def init_config_options():
             max_value=100
         )
 
-# --- Query Cortex Search Service ---
-# Query the Cortex search service to retrieve relevant procurement data context for a given query.
 def query_cortex_search_service(query):
     try:
         db, schema = session.get_current_database(), session.get_current_schema()
@@ -207,16 +173,12 @@ def query_cortex_search_service(query):
         st.error(f"❌ Error querying Cortex Search service: {str(e)}")
         return ""
 
-# --- Get Chat History ---
-# Retrieve recent chat history based on user-specified message limits.
 def get_chat_history():
     start_index = max(
         0, len(st.session_state.chat_history) - st.session_state.num_chat_messages
     )
     return st.session_state.chat_history[start_index : len(st.session_state.chat_history) - 1]
 
-# --- Make Chat History Summary ---
-# Summarize chat history and current question into a single query using Cortex.
 def make_chat_history_summary(chat_history, question):
     chat_history_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in chat_history])
     prompt = f"""
@@ -236,8 +198,6 @@ def make_chat_history_summary(chat_history, question):
     summary = complete(st.session_state.model_name, prompt)
     return summary
 
-# --- Create Prompt ---
-# Construct a prompt for Cortex, combining chat history and search service context if applicable.
 def create_prompt(user_question):
     chat_history_str = ""
     if st.session_state.use_chat_history:
@@ -280,8 +240,6 @@ def create_prompt(user_question):
     """
     return complete(st.session_state.model_name, prompt)
 
-# --- Authentication Logic ---
-# Handle user authentication with Snowflake and display a popup message on successful login.
 if not st.session_state.authenticated:
     st.title("Welcome to Snowflake Cortex AI")
     st.write("Please login to interact with your data")
@@ -311,28 +269,11 @@ if not st.session_state.authenticated:
                 cur.execute("ALTER SESSION SET TIMEZONE = 'UTC'")
                 cur.execute("ALTER SESSION SET QUOTED_IDENTIFIERS_IGNORE_CASE = TRUE")
             st.session_state.authenticated = True
-            st.session_state.show_popup = True  # Trigger popup after successful login
-            # Display popup message with JavaScript to auto-dismiss after 5 seconds
-            st.markdown("""
-            <div id="popup" class="popup-message">
-                Welcome to Cortex AI Assistant, I am here to help with procurement data
-            </div>
-            <script>
-                setTimeout(function() {
-                    var popup = document.getElementById("popup");
-                    if (popup) {
-                        popup.style.display = "none";
-                    }
-                }, 5000);
-            </script>
-            """, unsafe_allow_html=True)
             st.success("Authentication successful! Redirecting...")
             st.rerun()
         except Exception as e:
             st.error(f"Authentication failed: {e}")
 else:
-    # --- Main App Logic ---
-    # Initialize Snowpark session and Root object for authenticated users.
     session = st.session_state.snowpark_session
     root = Root(session)
 
@@ -340,8 +281,6 @@ else:
         st.session_state.rerun_trigger = False
         st.rerun()
 
-    # --- Run Snowflake Query ---
-    # Execute a SQL query and return results as a pandas DataFrame.
     def run_snowflake_query(query):
         try:
             if not query:
@@ -357,8 +296,6 @@ else:
             st.error(f"❌ SQL Execution Error: {str(e)}")
             return None
 
-    # --- Query Classification Functions ---
-    # Classify queries as structured, complete, summarize, suggestion, or greeting using regex.
     def is_structured_query(query: str):
         structured_patterns = [
             r'\b(count|number|where|group by|order by|sum|avg|max|min|total|how many|which|show|list|names?|are there any|rejected deliveries?|least|highest|duration|approval)\b',
@@ -388,8 +325,6 @@ else:
         ]
         return any(re.search(pattern, query.lower()) for pattern in greeting_patterns)
 
-    # --- Cortex Complete Function ---
-    # Call Cortex COMPLETE function to generate a response for a given prompt.
     def complete(model, prompt):
         try:
             prompt = prompt.replace("'", "\\'")
@@ -400,8 +335,6 @@ else:
             st.error(f"❌ COMPLETE Function Error: {str(e)}")
             return None
 
-    # --- Summarize Function ---
-    # Call Cortex SUMMARIZE function to condense text input.
     def summarize(text):
         try:
             text = text.replace("'", "\\'")
@@ -412,8 +345,6 @@ else:
             st.error(f"❌ SUMMARIZE Function Error: {str(e)}")
             return None
 
-    # --- Parse SSE Response ---
-    # Parse Server-Sent Events (SSE) responses from Cortex API into a list of events.
     def parse_sse_response(response_text: str) -> List[Dict]:
         events = []
         lines = response_text.strip().split("\n")
@@ -433,8 +364,6 @@ else:
                         st.error(f"❌ Failed to parse SSE data: {str(e)} - Data: {data_str}")
         return events
 
-    # --- Process SSE Response ---
-    # Extract SQL or search results from SSE responses based on query type.
     def process_sse_response(response, is_structured):
         sql = ""
         search_results = []
@@ -460,8 +389,6 @@ else:
             st.error(f"❌ Error Processing Response: {str(e)}")
         return sql.strip(), search_results
 
-    # --- Snowflake API Call ---
-    # Make HTTP request to Cortex API for structured or unstructured queries.
     def snowflake_api_call(query: str, is_structured: bool = False):
         payload = {
             "model": st.session_state.model_name,
@@ -495,14 +422,10 @@ else:
             st.error(f"❌ API Request Error: {str(e)}")
             return None
 
-    # --- Summarize Unstructured Answer ---
-    # Summarize unstructured responses into concise bullet points.
     def summarize_unstructured_answer(answer):
         sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|")\s', answer)
         return "\n".join(f"- {sent.strip()}" for sent in sentences[:6])
 
-    # --- Suggest Sample Questions ---
-    # Generate sample procurement-related questions when a query fails or is ambiguous.
     def suggest_sample_questions(query: str) -> List[str]:
         try:
             prompt = (
@@ -538,47 +461,54 @@ else:
                 "Which requisitions have been pending approval for more than a week?"
             ]
 
-    # --- Display Chart Tab ---
-    # Render interactive Plotly charts with user-selected axes and chart type.
     def display_chart_tab(df: pd.DataFrame, prefix: str = "chart", query: str = ""):
+        if df.empty or len(df.columns) < 2:
+            return
+        query_lower = query.lower()
+        if re.search(r'\b(county|jurisdiction)\b', query_lower):
+            default_chart = "Pie Chart"
+        elif re.search(r'\b(month|year|date)\b', query_lower):
+            default_chart = "Line Chart"
+        else:
+            default_chart = "Bar Chart"
+        all_cols = list(df.columns)
+        col1, col2, col3 = st.columns(3)
+        default_x = st.session_state.get(f"{prefix}_x", all_cols[0])
         try:
-            if df is None or df.empty or len(df.columns) < 2:
-                st.warning("No valid data available for visualization.")
-                return
-            query_lower = query.lower()
-            if re.search(r'\b(county|jurisdiction)\b', query_lower):
-                default_data = "Pie Chart"
-            elif re.search(r'\b(month|year|date)\b', query_lower):
-                default_data = "Line Chart"
-            else:
-                default_data = "Bar Chart"
-            all_cols = list(df.columns)
-            col1, col2, col3 = st.columns(3)
-            x_col = col1.selectbox("X axis", all_cols, index=0, key=f"{prefix}_x")
-            remaining_cols = [c for c in all_cols if c != x_col]
-            y_col = col2.selectbox("Y axis", remaining_cols, index=0, key=f"{prefix}_y")
-            chart_options = ["Line Chart", "Bar Chart", "Pie Chart", "Scatter Chart", "Histogram Chart"]
-            chart_type = col3.selectbox("Chart Type", chart_options, index=chart_options.index(default_data), key=f"{prefix}_type")
-            if chart_type == "Line Chart":
-                fig = px.line(df, x=x_col, y=y_col, title=chart_type)
-                st.plotly_chart(fig, key=f"{prefix}_line")
-            elif chart_type == "Bar Chart":
-                fig = px.bar(df, x=x_col, y=y_col, title=chart_type)
-                st.plotly_chart(fig, key=f"{prefix}_bar")
-            elif chart_type == "Pie Chart":
-                fig = px.pie(df, names=x_col, values=y_col, title=chart_type)
-                st.plotly_chart(fig, key=f"{prefix}_pie")
-            elif chart_type == "Scatter Chart":
-                fig = px.scatter(df, x=x_col, y=y_col, title=chart_type)
-                st.plotly_chart(fig, key=f"{prefix}_scatter")
-            elif chart_type == "Histogram Chart":
-                fig = px.histogram(df, x=x_col, title=chart_type)
-                st.plotly_chart(fig, key=f"{prefix}_hist")
-        except Exception as e:
-            st.error(f"❌ Error generating chart: {str(e)}")
+            x_index = all_cols.index(default_x)
+        except ValueError:
+            x_index = 0
+        x_col = col1.selectbox("X axis", all_cols, index=x_index, key=f"{prefix}_x")
+        remaining_cols = [c for c in all_cols if c != x_col]
+        default_y = st.session_state.get(f"{prefix}_y", remaining_cols[0])
+        try:
+            y_index = remaining_cols.index(default_y)
+        except ValueError:
+            y_index = 0
+        y_col = col2.selectbox("Y axis", remaining_cols, index=y_index, key=f"{prefix}_y")
+        chart_options = ["Line Chart", "Bar Chart", "Pie Chart", "Scatter Chart", "Histogram Chart"]
+        default_type = st.session_state.get(f"{prefix}_type", default_chart)
+        try:
+            type_index = chart_options.index(default_type)
+        except ValueError:
+            type_index = chart_options.index(default_chart)
+        chart_type = col3.selectbox("Chart Type", chart_options, index=type_index, key=f"{prefix}_type")
+        if chart_type == "Line Chart":
+            fig = px.line(df, x=x_col, y=y_col, title=chart_type)
+            st.plotly_chart(fig, key=f"{prefix}_line")
+        elif chart_type == "Bar Chart":
+            fig = px.bar(df, x=x_col, y=y_col, title=chart_type)
+            st.plotly_chart(fig, key=f"{prefix}_bar")
+        elif chart_type == "Pie Chart":
+            fig = px.pie(df, names=x_col, values=y_col, title=chart_type)
+            st.plotly_chart(fig, key=f"{prefix}_pie")
+        elif chart_type == "Scatter Chart":
+            fig = px.scatter(df, x=x_col, y=y_col, title=chart_type)
+            st.plotly_chart(fig, key=f"{prefix}_scatter")
+        elif chart_type == "Histogram Chart":
+            fig = px.histogram(df, x=x_col, title=chart_type)
+            st.plotly_chart(fig, key=f"{prefix}_hist")
 
-    # --- Sidebar UI ---
-    # Set up sidebar with logo, configuration options, about section, and help links.
     with st.sidebar:
         st.markdown("""
         <style>
@@ -599,36 +529,32 @@ else:
         about_container = st.container()
         help_container = st.container()
         with logo_container:
-            logo_url = "https://www.snowflake.com/wp-content/themes/snowflake/assets/img/logo-blue.svg"
-            st.image(logo_url, width=250)
+            st.image("https://www.snowflake.com/wp-content/themes/snowflake-img/logo-blue.svg", width=250)
         with button_container:
             init_config_options()
-        with about_container:
+        with about_container():
             st.markdown("### About")
             st.write(
-                "This application uses Snowflake Cortex Analyst to interpret "
+                This application uses Snowflake Cortex Analyst to interpret "
                 "your natural language questions and generate data insights. "
-                "Simply ask a question below to see relevant answers and visualizations."
+                Simply ask a question below to see relevant answers and visualizations."
             )
-        with help_container:
+        with help_container():
             st.markdown("### Help & Documentation")
             st.write(
-                "- [User Guide](https://docs.snowflake.com/en/guides-overview-ai-features)  \n"
-                "- [Snowflake Cortex Analyst Docs](https://docs.snowflake.com/)  \n"
+                "- [User Guide](https://docs.snowflake.com/en/guides-overview-ai-features)  \n "
+                "- [Snowflake Docs](https://docs.snowflake.com/) \n "
                 "- [Contact Support](https://www.snowflake.com/en/support/)"
             )
 
-    # --- Main UI and Query Processing ---
-    # Set up main interface with title, semantic model display, and chat input.
-    st.title("Cortex AI Assistant by DiLytics")
-    semantic_model_filename = SEMANTIC_MODEL.split("/")[-1]
+    st.title("Cortex Assistant by DiLytics AI")
+    semantic_model_filename = query = SEMANTIC_MODE.split("/")[-1]
     st.write(f"Semantic Model: {semantic_model_filename}")
     init_service_metadata()
 
-    # Define sample questions for sidebar buttons.
     st.sidebar.subheader("Sample Questions")
     sample_questions = [
-        "What is DiLytics Procurement Insight Solution?",
+        "What is DiLytics Procurement Insight Solution?"
         "What are the key subject areas covered in the solution?",
         "Describe the key metrics tracked in the Purchase Requisition reports.",
         "Show total purchase order value by organization.",
@@ -637,23 +563,22 @@ else:
         "What is the average requisition approval lead time?",
         "Which supplier has the minimum and maximum PO delivery rate?",
         "Which buyer has the least and highest PO approval duration?",
-        "What are the top 5 suppliers based on purchase order amount?"
+        "What are the top five suppliers based on purchase order amount?"
     ]
 
-    # Display chat history with results and visualizations.
     for message in st.session_state.chat_history:
         with st.chat_message(message["role"]):
-            st.write(message["content"])
+            st.write(message["content"], unsafe_allow_html=True)
             if message["role"] == "assistant" and "results" in message and message["results"] is not None:
                 with st.expander("View SQL Query", expanded=False):
                     st.code(message["sql"], language="sql")
-                st.write(f"Query Results ({len(message['results'])} rows):")
+                st.write(f"Query Results ({len(message['results"])} rows):")
                 st.dataframe(message["results"])
                 if not message["results"].empty and len(message["results"].columns) >= 2:
-                    st.write("Visualization:")
-                    display_chart_tab(message["results"], prefix=f"chart_{hash(message['content'])}", query=message.get("query", ""))
+                    st.markdown("**📈 Visualization:**")
+                    unique_prefix = f"chart_{hash(message['content'])}"
+                    display_chart_tab(message["results"], prefix=unique_prefix}", query=message["query"])
 
-    # Handle user query input and sample question buttons.
     query = st.chat_input("Ask your question...")
     if query and query.lower().startswith("no of"):
         query = query.replace("no of", "number of", 1)
@@ -661,7 +586,6 @@ else:
         if st.sidebar.button(sample, key=f"sample_{sample}"):
             query = sample
 
-    # Process user query based on its type and display results.
     if query:
         st.session_state.chart_x_axis = None
         st.session_state.chart_y_axis = None
@@ -682,7 +606,7 @@ else:
         st.session_state.chat_history.append({"role": "user", "content": original_query})
         st.session_state.messages.append({"role": "user", "content": original_query})
         with st.chat_message("user"):
-            st.write(original_query)
+            st.write(original_query, unsafe_allow_html=True)
         with st.chat_message("assistant"):
             with st.spinner("Generating Response..."):
                 is_structured = is_structured_query(query)
@@ -750,8 +674,9 @@ else:
                             st.write(f"Query Results ({len(results)} rows):")
                             st.dataframe(results)
                             if len(results.columns) >= 2:
-                                st.write("Visualization:")
-                                display_chart_tab(results, prefix=f"chart_{hash(query)}", query=query)
+                                st.markdown("📈 Visualization:")
+                                unique_prefix = f"chart_{hash(query)}"
+                                display_chart_tab(results, prefix=unique_prefix, query=query)
                             assistant_response.update({
                                 "content": response_content,
                                 "sql": sql,
@@ -759,7 +684,6 @@ else:
                                 "summary": summary
                             })
                             st.session_state.messages.append({
-                                "role": "assistant",
                                 "content": response_content,
                                 "sql": sql,
                                 "results": results,
@@ -775,7 +699,7 @@ else:
                         assistant_response["content"] = response_content
 
                 else:
-                    response = snowflake_api_call(query, is_structured=False)
+                    response = snowflake_api_call(query, {})
                     _, search_results = process_sse_response(response, is_structured=False)
                     if search_results:
                         raw_result = search_results[0]
@@ -809,3 +733,4 @@ else:
                 st.session_state.current_results = assistant_response.get("results")
                 st.session_state.current_sql = assistant_response.get("sql")
                 st.session_state.current_summary = assistant_response.get("summary")
+```
