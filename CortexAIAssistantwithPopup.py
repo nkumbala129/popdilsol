@@ -537,7 +537,7 @@ else:
             st.write(
                 "This application uses **Snowflake Cortex Analyst** to interpret "
                 "your natural language questions and generate data insights. "
-                Simply ask a question below to see relevant answers and visualizations."
+                "Simply ask a question below to see relevant answers and visualizations."
             )
         with help_container():
             st.markdown("### Help & Documentation")
