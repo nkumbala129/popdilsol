@@ -778,7 +778,7 @@ else:
 
                 if failed_response:
                     suggestions = suggest_sample_questions(query)
-                    response_content = "I'm not sure about your question. Here are some questions you can ask me:\n\n"
+                    response_content = "I'm not sure about your question. Here are some questions you can ask me:\n"
                     for i, suggestion in enumerate(suggestions, 1):
                         response_content += f"{i}. {suggestion}\n"
                     response_content += "\nThese questions might help clarify your query. Feel free to try one or rephrase your question!"
