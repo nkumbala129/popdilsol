@@ -1,4 +1,3 @@
-```python
 # Import necessary libraries for Streamlit UI, JSON handling, regex, HTTP requests,
 # Snowflake connectivity, pandas for data manipulation, Plotly for visualizations, and typing.
 import streamlit as st
@@ -810,4 +809,3 @@ else:
                 st.session_state.current_results = assistant_response.get("results")
                 st.session_state.current_sql = assistant_response.get("sql")
                 st.session_state.current_summary = assistant_response.get("summary")
-```
