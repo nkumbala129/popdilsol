@@ -85,7 +85,7 @@ if "rerun_trigger" not in st.session_state:
 
 # --- CSS Styling ---
 # Apply custom CSS to hide Streamlit branding, prevent chat message shading, disable copy buttons,
-# and fix the main title at the top of the page.
+# and fix the main title at the top of the page with responsive sizing.
 st.markdown("""
 <style>
 #MainMenu, header, footer {visibility: hidden;}
@@ -107,22 +107,34 @@ st.markdown("""
 .copy-button, [data-testid="copy-button"], [title="Copy to clipboard"], [data-testid="stTextArea"] {
     display: none !important;
 }
-/* Fix the main title at the top */
+/* Fix the main title at the top with responsive width */
 [data-testid="stAppViewContainer"] h1 {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
-    width: 100% !important;
+    right: 0 !important;
+    width: 100vw !important; /* Use viewport width for full coverage */
+    max-width: calc(100% - 250px) !important; /* Adjust for sidebar width */
     background-color: #ffffff !important; /* White background, adjust for dark theme if needed */
-    z-index: 9999 !important; /* High z-index to ensure it stays on top */
-    padding: 1rem 2rem !important; /* Adjust padding for better spacing */
+    z-index: 9999 !important; /* Ensure title stays on top */
+    padding: 0.8rem 1.5rem !important; /* Responsive padding */
     margin: 0 !important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important; /* Subtle shadow for separation */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important; /* Subtle shadow */
     box-sizing: border-box !important;
+    font-size: clamp(1.5rem, 2.5vw, 2rem) !important; /* Responsive font size */
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important; /* Handle long titles */
 }
-/* Add padding to the main content to prevent overlap with the fixed title */
+/* Adjust for sidebar open/closed state */
+@media (max-width: 991px) {
+    [data-testid="stAppViewContainer"] h1 {
+        max-width: 100% !important; /* Full width on mobile when sidebar collapses */
+    }
+}
+/* Add padding to main content to prevent overlap with fixed title */
 [data-testid="stAppViewContainer"] > div:first-child {
-    padding-top: 70px !important; /* Increased to account for title height */
+    padding-top: 60px !important; /* Adjust based on title height */
 }
 </style>
 """, unsafe_allow_html=True)
