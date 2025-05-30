@@ -84,8 +84,7 @@ if "rerun_trigger" not in st.session_state:
     st.session_state.rerun_trigger = False
 
 # --- CSS Styling ---
-# Apply custom CSS to hide Streamlit branding, prevent chat message shading, disable copy buttons,
-# and fix the header (title, welcome message, and semantic model text) at the top of the page.
+# Apply custom CSS to hide Streamlit branding, prevent chat message shading, and disable copy buttons.
 st.markdown("""
 <style>
 #MainMenu, header, footer {visibility: hidden;}
@@ -106,63 +105,6 @@ st.markdown("""
 }
 .copy-button, [data-testid="copy-button"], [title="Copy to clipboard"], [data-testid="stTextArea"] {
     display: none !important;
-}
-/* Fix the header (title, welcome message, and semantic model text) at the top */
-.fixed-header {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    width: 100% !important;
-    background-color: #ffffff !important; /* White background, adjust for dark theme if needed */
-    z-index: 9999 !important; /* Ensure header stays on top */
-    padding: 0.8rem 1.5rem !important; /* Responsive padding */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important; /* Subtle shadow for separation */
-    box-sizing: border-box !important;
-}
-/* Adjust width to account for sidebar */
-@media (min-width: 992px) {
-    .fixed-header {
-        left: 250px !important; /* Match sidebar width */
-        width: calc(100% - 250px) !important; /* Adjust for sidebar */
-    }
-}
-/* On mobile, when sidebar collapses, use full width */
-@media (max-width: 991px) {
-    .fixed-header {
-        left: 0 !important;
-        width: 100% !important;
-    }
-}
-/* Responsive font size for the title */
-.fixed-header h1 {
-    font-size: clamp(1.5rem, 2.5vw, 2rem) !important; /* Responsive font size */
-    margin: 0 !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important; /* Handle long titles */
-}
-/* Style the welcome message */
-.fixed-header div:nth-child(2) {
-    font-size: 1rem !important;
-    font-weight: bold !important;
-    color: #333 !important; /* Darker color for emphasis */
-    margin-top: 0.2rem !important;
-}
-/* Style the semantic model text */
-.fixed-header div:nth-child(3) {
-    font-size: 0.9rem !important;
-    color: #666 !important; /* Match the gray color from the screenshot */
-    margin-top: 0.2rem !important;
-}
-/* Add padding to the main content area to prevent overlap with the fixed header */
-[data-testid="stVerticalBlock"] > div:nth-child(2) {
-    padding-top: 100px !important; /* Adjust based on header height */
-}
-/* Ensure the chat container scrolls properly */
-[data-testid="stChat"] {
-    overflow-y: auto !important;
-    height: calc(100vh - 100px) !important; /* Adjust height to fit viewport minus header */
 }
 </style>
 """, unsafe_allow_html=True)
@@ -659,17 +601,12 @@ else:
                 "- [Contact Support](https://www.snowflake.com/en/support/)"
             )
 
-        # --- Main UI and Query Processing ---
-        # Set up main interface with a fixed header containing the title, welcome message, and semantic model text.
-        with st.container():
-            st.markdown('<div class="fixed-header">', unsafe_allow_html=True)
-            st.title("Cortex AI Assistant by DiLytics")
-            st.write(f"***Welcome to Cortex AI. I am here to help with Dilytics Procurement Insights Solutions***")
-            semantic_model_filename = SEMANTIC_MODEL.split("/")[-1]
-            st.write(f"Semantic Model: {semantic_model_filename}")
-            st.markdown('</div>', unsafe_allow_html=True)
-        
-        init_service_metadata()
+    # --- Main UI and Query Processing ---
+    # Set up main interface with title, semantic model display, and chat input.
+    st.title("Cortex AI Assistant by DiLytics")
+    semantic_model_filename = SEMANTIC_MODEL.split("/")[-1]
+    st.write(f"***Welcome to Cortex AI.I am here to help with Dilytics Procurement Insights Solutions***")
+    init_service_metadata()
 
     # Define sample questions for sidebar buttons.
     st.sidebar.subheader("Sample Questions")
