@@ -85,7 +85,7 @@ if "rerun_trigger" not in st.session_state:
 
 # --- CSS Styling ---
 # Apply custom CSS to hide Streamlit branding, prevent chat message shading, disable copy buttons,
-# and fix the main title at the top of the page with responsive sizing.
+# and fix the main title and semantic model text at the top of the page with responsive sizing.
 st.markdown("""
 <style>
 #MainMenu, header, footer {visibility: hidden;}
@@ -107,34 +107,50 @@ st.markdown("""
 .copy-button, [data-testid="copy-button"], [title="Copy to clipboard"], [data-testid="stTextArea"] {
     display: none !important;
 }
-/* Fix the main title at the top with responsive width */
-[data-testid="stAppViewContainer"] h1 {
+/* Fix the header (title + semantic model text) at the top */
+[data-testid="stAppViewContainer"] > div:first-child > div:first-child {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
-    width: 100vw !important; /* Use viewport width for full coverage */
-    max-width: calc(100% - 250px) !important; /* Adjust for sidebar width */
+    width: 100% !important;
     background-color: #ffffff !important; /* White background, adjust for dark theme if needed */
-    z-index: 9999 !important; /* Ensure title stays on top */
+    z-index: 9999 !important; /* Ensure header stays on top */
     padding: 0.8rem 1.5rem !important; /* Responsive padding */
-    margin: 0 !important;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important; /* Subtle shadow */
     box-sizing: border-box !important;
+}
+/* Adjust width to account for sidebar */
+@media (min-width: 992px) {
+    [data-testid="stAppViewContainer"] > div:first-child > div:first-child {
+        left: 250px !important; /* Match sidebar width */
+        width: calc(100% - 250px) !important; /* Adjust for sidebar */
+    }
+}
+/* On mobile, when sidebar collapses, use full width */
+@media (max-width: 991px) {
+    [data-testid="stAppViewContainer"] > div:first-child > div:first-child {
+        left: 0 !important;
+        width: 100% !important;
+    }
+}
+/* Responsive font size for the title */
+[data-testid="stAppViewContainer"] h1 {
     font-size: clamp(1.5rem, 2.5vw, 2rem) !important; /* Responsive font size */
+    margin: 0 !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important; /* Handle long titles */
 }
-/* Adjust for sidebar open/closed state */
-@media (max-width: 991px) {
-    [data-testid="stAppViewContainer"] h1 {
-        max-width: 100% !important; /* Full width on mobile when sidebar collapses */
-    }
+/* Ensure semantic model text doesn't break layout */
+[data-testid="stAppViewContainer"] > div:first-child > div:first-child > div:nth-child(2) {
+    font-size: 0.9rem !important;
+    color: #666 !important; /* Match the gray color from the screenshot */
+    margin-top: 0.2rem !important;
 }
-/* Add padding to main content to prevent overlap with fixed title */
+/* Add padding to main content to prevent overlap with fixed header */
 [data-testid="stAppViewContainer"] > div:first-child {
-    padding-top: 60px !important; /* Adjust based on title height */
+    padding-top: 80px !important; /* Adjust based on header height */
 }
 </style>
 """, unsafe_allow_html=True)
