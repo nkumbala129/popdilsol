@@ -648,14 +648,14 @@ else:
 
 # --- Main UI and Query Processing ---
 # Set up main interface with a fixed header containing the title and semantic model text.
-with st.container():
-    st.markdown('<div class="fixed-header">', unsafe_allow_html=True)
-    st.title("Cortex AI Assistant by DiLytics")
-    semantic_model_filename = SEMANTIC_MODEL.split("/")[-1]
-    st.write(f"Semantic Model: {semantic_model_filename}")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-init_service_metadata()
+        with st.container():
+            st.markdown('<div class="fixed-header">', unsafe_allow_html=True)
+            st.title("Cortex AI Assistant by DiLytics")
+            semantic_model_filename = SEMANTIC_MODEL.split("/")[-1]
+            st.write(f"Semantic Model: {semantic_model_filename}")
+            st.markdown('</div>', unsafe_allow_html=True)
+        
+        init_service_metadata()
 
     # Define sample questions for sidebar buttons.
     st.sidebar.subheader("Sample Questions")
