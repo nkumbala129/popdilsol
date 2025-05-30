@@ -84,7 +84,8 @@ if "rerun_trigger" not in st.session_state:
     st.session_state.rerun_trigger = False
 
 # --- CSS Styling ---
-# Apply custom CSS to hide Streamlit branding, prevent chat message shading, and disable copy buttons.
+# Apply custom CSS to hide Streamlit branding, prevent chat message shading, disable copy buttons,
+# and fix the main title at the top of the page.
 st.markdown("""
 <style>
 #MainMenu, header, footer {visibility: hidden;}
@@ -106,9 +107,24 @@ st.markdown("""
 .copy-button, [data-testid="copy-button"], [title="Copy to clipboard"], [data-testid="stTextArea"] {
     display: none !important;
 }
+/* Fix the main title at the top */
+[data-testid="stAppViewContainer"] > div:first-child > div > div > h1 {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: white; /* Adjust based on your theme */
+    z-index: 1000;
+    padding: 1rem;
+    margin: 0;
+    border-bottom: 1px solid #e6e6e6; /* Optional: subtle border for separation */
+}
+/* Add padding to the content to prevent overlap with fixed title */
+[data-testid="stAppViewContainer"] {
+    padding-top: 60px; /* Adjust based on the height of your title */
+}
 </style>
 """, unsafe_allow_html=True)
-
 # --- Stream Text Function ---
 # Stream text output in chunks with a delay for a typewriter effect.
 def stream_text(text: str, chunk_size: int = 1, delay: float = 0.02):
