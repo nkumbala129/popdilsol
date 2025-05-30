@@ -605,7 +605,7 @@ else:
     # Set up main interface with title, semantic model display, and chat input.
     st.title("Cortex AI Assistant by DiLytics")
     semantic_model_filename = SEMANTIC_MODEL.split("/")[-1]
-    st.write(f"Semantic Model: {semantic_model_filename}")
+    st.write(f"Welcome to Cortex AI.I am here to help with Dilytics Procurement Insights Solutions ")
     init_service_metadata()
 
     # Define sample questions for sidebar buttons.
