@@ -506,44 +506,59 @@ else:
                 "Which requisitions have been pending approval for more than a week?"
             ]
 
-    # --- Display Chart Tab ---
-    # Render interactive Plotly charts with user-selected axes and chart type.
+# Function to display charts using Plotly
     def display_chart_tab(df: pd.DataFrame, prefix: str = "chart", query: str = ""):
+        if df.empty or len(df.columns) < 2:
+            return
+        query_lower = query.lower()
+        # Determine default chart type based on query content
+        if re.search(r'\b(county|jurisdiction)\b', query_lower):
+            default_chart = "Pie Chart"
+        elif re.search(r'\b(month|year|date)\b', query_lower):
+            default_chart = "Line Chart"
+        else:
+            default_chart = "Bar Chart"
+        all_cols = list(df.columns)
+        col1, col2, col3 = st.columns(3)
+        default_x = st.session_state.get(f"{prefix}_x", all_cols[0])
         try:
-            if df is None or df.empty or len(df.columns) < 2:
-                st.warning("No valid data available for visualization.")
-                return
-            query_lower = query.lower()
-            if re.search(r'\b(county|jurisdiction)\b', query_lower):
-                default_data = "Pie Chart"
-            elif re.search(r'\b(month|year|date)\b', query_lower):
-                default_data = "Line Chart"
-            else:
-                default_data = "Bar Chart"
-            all_cols = list(df.columns)
-            col1, col2, col3 = st.columns(3)
-            x_col = col1.selectbox("X axis", all_cols, index=0, key=f"{prefix}_x")
-            remaining_cols = [c for c in all_cols if c != x_col]
-            y_col = col2.selectbox("Y axis", remaining_cols, index=0, key=f"{prefix}_y")
-            chart_options = ["Line Chart", "Bar Chart", "Pie Chart", "Scatter Chart", "Histogram Chart"]
-            chart_type = col3.selectbox("Chart Type", chart_options, index=chart_options.index(default_data), key=f"{prefix}_type")
-            if chart_type == "Line Chart":
-                fig = px.line(df, x=x_col, y=y_col, title=chart_type)
-                st.plotly_chart(fig, key=f"{prefix}_line")
-            elif chart_type == "Bar Chart":
-                fig = px.bar(df, x=x_col, y=y_col, title=chart_type)
-                st.plotly_chart(fig, key=f"{prefix}_bar")
-            elif chart_type == "Pie Chart":
-                fig = px.pie(df, names=x_col, values=y_col, title=chart_type)
-                st.plotly_chart(fig, key=f"{prefix}_pie")
-            elif chart_type == "Scatter Chart":
-                fig = px.scatter(df, x=x_col, y=y_col, title=chart_type)
-                st.plotly_chart(fig, key=f"{prefix}_scatter")
-            elif chart_type == "Histogram Chart":
-                fig = px.histogram(df, x=x_col, title=chart_type)
-                st.plotly_chart(fig, key=f"{prefix}_hist")
-        except Exception as e:
-            st.error(f"❌ Error generating chart: {str(e)}")
+            x_index = all_cols.index(default_x)
+        except ValueError:
+            x_index = 0
+        # Select X-axis column
+        x_col = col1.selectbox("X axis", all_cols, index=x_index, key=f"{prefix}_x")
+        remaining_cols = [c for c in all_cols if c != x_col]
+        default_y = st.session_state.get(f"{prefix}_y", remaining_cols[0])
+        try:
+            y_index = remaining_cols.index(default_y)
+        except ValueError:
+            y_index = 0
+        # Select Y-axis column
+        y_col = col2.selectbox("Y axis", remaining_cols, index=y_index, key=f"{prefix}_y")
+        chart_options = ["Line Chart", "Bar Chart", "Pie Chart", "Scatter Chart", "Histogram Chart"]
+        default_type = st.session_state.get(f"{prefix}_type", default_chart)
+        try:
+            type_index = chart_options.index(default_type)
+        except ValueError:
+            type_index = chart_options.index(default_chart)
+        # Select chart type
+        chart_type = col3.selectbox("Chart Type", chart_options, index=type_index, key=f"{prefix}_type")
+        # Render chart based on selected type
+        if chart_type == "Line Chart":
+            fig = px.line(df, x=x_col, y=y_col, title=chart_type)
+            st.plotly_chart(fig, key=f"{prefix}_line")
+        elif chart_type == "Bar Chart":
+            fig = px.bar(df, x=x_col, y=y_col, title=chart_type)
+            st.plotly_chart(fig, key=f"{prefix}_bar")
+        elif chart_type == "Pie Chart":
+            fig = px.pie(df, names=x_col, values=y_col, title=chart_type)
+            st.plotly_chart(fig, key=f"{prefix}_pie")
+        elif chart_type == "Scatter Chart":
+            fig = px.scatter(df, x=x_col, y=y_col, title=chart_type)
+            st.plotly_chart(fig, key=f"{prefix}_scatter")
+        elif chart_type == "Histogram Chart":
+            fig = px.histogram(df, x=x_col, title=chart_type)
+            st.plotly_chart(fig, key=f"{prefix}_hist")
 
     # --- Sidebar UI ---
     # Set up sidebar with logo, configuration options, about section, and help links.
