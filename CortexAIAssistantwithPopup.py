@@ -589,7 +589,7 @@ else:
         with about_container:
             st.markdown("### About")
             st.write(
-                "This application uses ***Snowflake Cortex Analyst to interpret*** "
+                "This application uses **Snowflake Cortex Analyst to interpret** "
                 "your natural language questions and generate data insights. "
                 "Simply ask a question below to see relevant answers and visualizations."
             )
