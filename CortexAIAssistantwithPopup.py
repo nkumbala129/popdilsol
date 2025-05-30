@@ -572,7 +572,7 @@ else:
             if message["role"] == "assistant" and "results" in message and message["results"] is not None:
                 with st.expander("View SQL Query", expanded=False):
                     st.code(message["sql"], language="sql")
-                st.write(f"Query Results ({len(message['results"])} rows):")
+                st.write(f"Query Results ({len(message["results"])} rows):")
                 st.dataframe(message["results"])
                 if not message["results"].empty and len(message["results"].columns) >= 2:
                     st.markdown("**📈 Visualization:**")
