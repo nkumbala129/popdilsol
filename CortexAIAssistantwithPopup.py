@@ -577,7 +577,7 @@ else:
                 if not message["results"].empty and len(message["results"].columns) >= 2:
                     st.markdown("**📈 Visualization:**")
                     unique_prefix = f"chart_{hash(message['content'])}"
-                    display_chart_tab(message["results"], prefix=unique_prefix}", query=message["query"])
+                    display_chart_tab(message["results"], "prefix=unique_prefix", query=message["query"])
 
     query = st.chat_input("Ask your question...")
     if query and query.lower().startswith("no of"):
